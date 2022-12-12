@@ -1,9 +1,9 @@
 #include <stdio.h>
-#include "stdlib.h"
+
 struct num_info {
-    int num;
-    unsigned int times;
-    _Bool latest;
+    int num; //数值，将从标准输入获得
+    unsigned int times;//用于记录出现次数
+    _Bool latest; //在相等的数字中，该数字是否排在最后
 };
 typedef struct num_info num_info;
 
@@ -12,50 +12,57 @@ int main() {
     scanf("%u", &N);
     num_info number[N];
     for (int i = 0; i < N; ++i) {
-        scanf("%d",&number[i].num);
+        scanf("%d", &((number+i)->num));
     }
-    for(int i=0;i<N;i++){
-        number[i].times=1;
-        number[i].latest=1;
-        for(int j=i-1;j>=0;j--){
-            if(number[j].num==number[i].num){
-                number[j].times+=number[i].times;
-                number[i].latest=0;
-                number[j].latest=1;
+    for (int i = 0; i < N; i++) {
+        number[i].times = 1;
+        number[i].latest = 1;
+        for (int j = i - 1; j >= 0; j--) {
+            if (number[j].num == number[i].num) {
+                number[i].times += number[j].times;
+                number[i].latest = 1;
+                number[j].latest = 0;
                 break;
             }
         }
     }
-    num_info *most_p=number,*end_p=number+N;//打擂台找出现次数*最多*的数字（只找第一个）
-    for (int i = 0; i < N; ++i) {
-        if(number[i].latest&&number[i].times>most_p->times){
-            most_p=number+i;
-        } 
-    }
-    unsigned int most_times = most_p->times;
-    //下面用链表(头插入法）记录并排序
-    struct node{
-        num_info * num_p; //记录number的地址
-        struct node * next;
-    };
-    typedef struct node node_t;
-    //创建链表并初始化;
-    node_t *num;
-    num = (node_t *)malloc(sizeof(node_t));
-    if(num==NULL)return -1;//若内存分配失败则结束程序
-    num->num_p=most_p;
-    num->next=NULL;
-    //接着记录
-    for(most_p++;most_p<=end_p;most_p++){
-        while(most_p->times==most_times){
-            node_t *p;
-            p=(node_t *) malloc(sizeof (node_t));//申请新节点
-            if(p==NULL)return -1;//若内存分配失败则结束程序
-            p->num_p=most_p;
-            p->next=num->next;
-            num->next=p;
+    num_info *p[N], *most = number, *end_p = number + N - 1;//打擂台找出现次数*最多*的数字（只找第一个）
+    for (p[0] = number + 1; p[0] <= end_p; p[0]++) {
+        if (p[0]->latest && p[0]->times > most->times) {
+            most = p[0];
         }
     }
-    //TODO然后排序
+    /*
+     * 把出现次数最多的各个数字的地址放在指针数组里
+     */
+    p[0]=most;
+    int cnt=1;
+    while (most<=end_p){
+        most++;
+        if(most->times==p[0]->times){
+            p[cnt]=most;
+            cnt++;
+        }
+    }
+    //然后冒泡排序
+    for (int i = 0; i < cnt-1; ++i) {
+        for (int j = 0; j < cnt-i-1; ++j) {
+            if(p[j]->num > p[j+1]->num){
+                num_info * tmp;
+                tmp=p[j];
+                p[j]=p[j+1];
+                p[j+1]=tmp;
+            }
+        }
+    }
+    //输出
+    void print_num(num_info*);
+    for (int i = 0; i < cnt; ++i) {
+        print_num(p[i]);
+    }
+
     return 0;
+}
+void print_num(num_info *p){
+    printf("%d %u\n",p->num,p->times);
 }
